@@ -21,11 +21,7 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Configuration
-import android.graphics.ImageFormat
-import android.graphics.Matrix
-import android.graphics.Point
-import android.graphics.RectF
-import android.graphics.SurfaceTexture
+import android.graphics.*
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraCharacteristics
@@ -35,13 +31,17 @@ import android.hardware.camera2.CameraMetadata
 import android.hardware.camera2.CaptureRequest
 import android.hardware.camera2.CaptureResult
 import android.hardware.camera2.TotalCaptureResult
+import android.hardware.camera2.params.StreamConfigurationMap
+import android.media.Image
 import android.media.ImageReader
 import android.os.Bundle
+import android.os.Environment
 import android.os.Handler
 import android.os.HandlerThread
 import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
+import android.support.v4.content.ContextCompat.getSystemService
 import android.util.Log
 import android.util.Size
 import android.util.SparseIntArray
@@ -50,13 +50,24 @@ import android.view.Surface
 import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
-import java.io.File
-import java.util.Arrays
-import java.util.Collections
+import android.widget.TabHost
+import android.widget.TextView
+import android.widget.Toast
+import com.google.android.gms.vision.Frame
+import com.google.android.gms.vision.face.FaceDetector
+import kotlinx.android.synthetic.main.fragment_camera2_basic.*
+import org.jetbrains.anko.doAsync
+import org.jetbrains.anko.uiThread
+import java.io.*
+import java.lang.Exception
+import java.text.SimpleDateFormat
+import java.util.*
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
-
+import kotlin.concurrent.schedule
+import kotlin.coroutines.coroutineContext
+import kotlin.concurrent.schedule
 class Camera2BasicFragment : Fragment(), View.OnClickListener,
     ActivityCompat.OnRequestPermissionsResultCallback {
 
@@ -79,6 +90,7 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
         override fun onSurfaceTextureUpdated(texture: SurfaceTexture) = Unit
 
     }
+    public lateinit var myDigitalCLock: TextView
 
     /**
      * ID of the current [CameraDevice].
@@ -89,7 +101,7 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
      * An [AutoFitTextureView] for camera preview.
      */
     private lateinit var textureView: AutoFitTextureView
-
+    var TAG="Camera2BasicFragment"
     /**
      * A [CameraCaptureSession] for camera preview.
      */
@@ -132,6 +144,8 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
     /**
      * An additional thread for running tasks that shouldn't block the UI.
      */
+
+
     private var backgroundThread: HandlerThread? = null
 
     /**
@@ -257,8 +271,75 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
         view.findViewById<View>(R.id.picture).setOnClickListener(this)
         view.findViewById<View>(R.id.info).setOnClickListener(this)
         textureView = view.findViewById(R.id.texture)
+
+        myDigitalCLock = view.findViewById(R.id.digitalClock)
+
+        doAsync {
+            var myDate = getCurrentDate()
+
+            for (i in 0 until 9008941372) {
+
+
+                Thread.sleep(1000)
+              //  Log.e(TAG, getCurrentTime()+getCurrentDate())
+                var myTime = getCurrentTime()
+                var myString = " "+myDate+" "+"\n"+" " + myTime+" "
+
+
+                uiThread {
+
+
+    digitalClock.text = myString
+
+}
+
+
+
+
+            }
+
+        }
+
+
+
+
+
+      //  runDigitalClock()
+    }
+    fun runDigitalClock(){
+//        for (i in 1..1000) {
+//
+//            try {
+//                var myDate = getCurrentDate()
+//                var myTime = getCurrentTime()
+//                Thread.sleep(1000)
+//                var myString = myDate +"\n" + myTime
+//                myDigitalCLock.text = myString
+//                Log.e(TAG, myString)
+//
+//
+//            } catch (e: Exception) {
+//
+//            }
+//        }
     }
 
+    fun getCurrentTime(): String {
+
+        val c = Calendar.getInstance()
+        val df = SimpleDateFormat("h:mm:ss a")
+
+        return df.format(c.time)
+    }
+
+    fun getCurrentDate(): String {
+        val c = Calendar.getInstance()
+        println("Current time => $c")
+        val df = SimpleDateFormat("MMM dd,yyyy")
+        return df.format(c.time)
+
+
+    }
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         file = File(activity!!.getExternalFilesDir(null), PIC_FILE_NAME)
@@ -373,7 +454,7 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
                 flashSupported =
                         characteristics.get(CameraCharacteristics.FLASH_INFO_AVAILABLE) == true
 
-                this.cameraId = cameraId
+                this.cameraId = manager.getCameraIdList()[1]
 
                 // We've found a viable camera and finished setting up member variables,
                 // so we don't need to iterate through other available cameras.
@@ -441,7 +522,10 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
             throw RuntimeException("Interrupted while trying to lock camera opening.", e)
         }
 
+
+
     }
+
 
     /**
      * Closes the current [CameraDevice].
@@ -488,6 +572,115 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
     /**
      * Creates a new [CameraCaptureSession] for camera preview.
      */
+    private fun takePicture() {
+        Log.e(TAG,"takePicre")
+        if (cameraDevice == null)
+            return
+
+        val manager = activity!!.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        try {
+            var characteristics = manager.getCameraCharacteristics(cameraDevice!!.id)
+            var jpegSizes: Array<Size>? = null
+            if (characteristics != null)
+                jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
+                    .getOutputSizes(ImageFormat.JPEG)
+
+            //Capture image with custom size
+            var width = 640
+            var height = 480
+            if (jpegSizes != null && jpegSizes.isNotEmpty()) {
+                width = jpegSizes[0].width
+                height = jpegSizes[0].height
+            }
+            val reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1)
+            val outputSurface = java.util.ArrayList<Surface>(2)
+            outputSurface.add(reader.surface)
+            outputSurface.add(Surface(textureView.surfaceTexture))
+
+            val captureBuilder = cameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE)
+
+            captureBuilder.addTarget(reader.surface)
+            captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
+
+            //Check orientation base on device
+            val rotation = activity!!.windowManager.defaultDisplay.rotation
+            captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation))
+
+            file = File(Environment.getExternalStorageDirectory().toString() + "/" + UUID.randomUUID().toString() + ".jpg")
+            val readerListener = object : ImageReader.OnImageAvailableListener {
+                override fun onImageAvailable(imageReader: ImageReader) {
+                    var image: Image? = null
+                    try {
+                        image = reader.acquireLatestImage()
+                        val buffer = image!!.planes[0].buffer
+                        val bytes = ByteArray(buffer.capacity())
+                        doAsync {
+                            var myBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                            Log.e(TAG, myBitmap.toString())
+                            detect(myBitmap,activity!!)
+                        }
+
+                        buffer.get(bytes)
+                        save(bytes)
+
+                    } catch (e: FileNotFoundException) {
+                        e.printStackTrace()
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    } finally {
+                        run { image?.close() }
+                    }
+                }
+
+                @Throws(IOException::class)
+                private fun save(bytes: ByteArray) {
+                    var outputStream: OutputStream? = null
+                    try {
+                        outputStream = FileOutputStream(file)
+                        outputStream!!.write(bytes)
+                    } finally {
+                        outputStream?.close()
+                    }
+                }
+            }
+
+            reader.setOnImageAvailableListener(readerListener, backgroundHandler)
+            val captureListener = object : CameraCaptureSession.CaptureCallback() {
+                override fun onCaptureCompleted(
+                    session: CameraCaptureSession,
+                    request: CaptureRequest,
+                    result: TotalCaptureResult
+                ) {
+                    super.onCaptureCompleted(session, request, result)
+
+                    Log.e(TAG,"Saved $file")
+                   // Toast.makeText(this,"asd",Toast.LENGTH_SHORT).to
+                    createCameraPreviewSession()
+                }
+            }
+
+            cameraDevice!!.createCaptureSession(outputSurface, object : CameraCaptureSession.StateCallback() {
+                override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
+                    try {
+                        cameraCaptureSession.capture(captureBuilder.build(), captureListener, backgroundHandler)
+                    } catch (e: CameraAccessException) {
+                        e.printStackTrace()
+                    }
+
+                }
+
+                override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
+
+                }
+            }, this.backgroundHandler)
+
+
+        } catch (e: CameraAccessException) {
+            e.printStackTrace()
+        }
+
+    }
+
     private fun createCameraPreviewSession() {
         try {
             val texture = textureView.surfaceTexture
@@ -578,20 +771,21 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
      * Lock the focus as the first step for a still image capture.
      */
     private fun lockFocus() {
-        try {
-            // This is how to tell the camera to lock focus.
-            previewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
-                CameraMetadata.CONTROL_AF_TRIGGER_START)
-            // Tell #captureCallback to wait for the lock.
-            state = STATE_WAITING_LOCK
-            captureSession?.capture(previewRequestBuilder.build(), captureCallback,
-                backgroundHandler)
-            Log.e(TAG, "YOYO")
-
-        } catch (e: CameraAccessException) {
-            Log.e(TAG, e.toString())
-        }
-        Log.e(TAG, "yoyogwapo")
+        takePicture()
+//        try {
+//            // This is how to tell the camera to lock focus.
+//            previewRequestBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER,
+//                CameraMetadata.CONTROL_AF_TRIGGER_START)
+//            // Tell #captureCallback to wait for the lock.
+//            state = STATE_WAITING_LOCK
+//            captureSession?.capture(previewRequestBuilder.build(), captureCallback,
+//                backgroundHandler)
+//            Log.e(TAG, "YOYO")
+//
+//        } catch (e: CameraAccessException) {
+//            Log.e(TAG, e.toString())
+//        }
+//        Log.e(TAG, "yoyogwapo")
 
 
     }
@@ -815,6 +1009,79 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
             }
         }
 
+
+        fun getImage(image: ByteArray): Bitmap {
+           lateinit var myBitmap:Bitmap
+            doAsync{
+
+                myBitmap =  BitmapFactory.decodeByteArray(image, 0, image.size)
+
+            }
+            return myBitmap
+        }
+
+        private fun detect(bitmap: Bitmap,context:Context): Int {
+            var detector = FaceDetector.Builder(context)
+                .setProminentFaceOnly(true)
+                .setTrackingEnabled(false)
+                .build()
+            val frame = Frame.Builder().setBitmap(bitmap).build()
+            val faces = detector.detect(frame)
+            detector.release()
+
+            Log.e(
+                TAG, "detect \n" +
+                        "bitmap width:" + bitmap.width + " height:" + bitmap.height + "\n" +
+                        "face width:" + " height:"
+            )
+            Log.e(TAG, "face size:" + faces.size())
+
+
+
+            if (faces.size() > 0) {
+                val face = faces.valueAt(0)
+                var x = face.position.x.toInt()
+                var y = face.position.y.toInt()
+                var width = Math.min(face.width.toInt(), bitmap.width - x)
+                var height = Math.min(face.height.toInt(), bitmap.height - y)
+                if (x < 0) {
+                    width += x // += x is negative
+                    x = 0
+                }
+                if (y < 0) {
+                    height += y // += y is negative
+                    y = 0
+
+                }
+                Log.e(TAG, "Y = " + y + " height " + height + " = " + (y + height) + " bH " + bitmap.height)
+                Log.e(TAG, "x = " + x + " width " + width + " = " + (x + width) + " bW " + bitmap.width)
+
+                if (y + height > bitmap.height) {// to avoid java.lang.IllegalArgumentException: y + height must be <= bitmap.height()
+                    val difference =
+                        Math.abs(y + height - bitmap.height) // Get the difference of bitmap height and y+height
+                    val divide = difference / 2                              // divide it to 2
+                    y += divide                                            // add it to y and subtract it to height
+                    height -= divide                                       // so we can get the center of the fucking face
+
+                }
+
+                if (x + width > bitmap.width) {// to avoid java.lang.IllegalArgumentException: x + width must be <= bitmap.getWidth()
+                    val difference =
+                        Math.abs(y + height - bitmap.height) // Get the difference of bitmap width and x + width
+                    val divide = difference / 2                              // divide it to 2
+                    x += divide                                            // add it to y and subtract it to height
+                    width -= divide                                       // so we can get the center of the fucking face
+                }
+
+
+                return faces.size()
+            }
+            return faces.size()
+        }
+
+
         @JvmStatic fun newInstance(): Camera2BasicFragment = Camera2BasicFragment()
     }
+
+
 }

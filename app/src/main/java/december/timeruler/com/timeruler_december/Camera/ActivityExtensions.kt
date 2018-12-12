@@ -1,3 +1,7 @@
+package december.timeruler.com.timeruler_december.Camera
+
+import android.support.v4.app.FragmentActivity
+import android.widget.Toast
 
 /*
  * Copyright 2017 The Android Open Source Project
@@ -15,9 +19,15 @@
  * limitations under the License.
  */
 
-@file:JvmName("Constants")
+/**
+ * This file illustrates Kotlin's Extension Functions by extending FragmentActivity.
+ */
 
-package december.timeruler.com.timeruler_december
-
-@JvmField val REQUEST_CAMERA_PERMISSION = 1
-@JvmField val PIC_FILE_NAME = "pic.jpg"
+/**
+ * Shows a [Toast] on the UI thread.
+ *
+ * @param text The message to show
+ */
+fun FragmentActivity.showToast(text: String) {
+    runOnUiThread { Toast.makeText(this, text, Toast.LENGTH_SHORT).show() }
+}

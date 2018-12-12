@@ -1,4 +1,4 @@
-package december.timeruler.com.timeruler_december
+package december.timeruler.com.timeruler_december.Camera
 
 /*
  * Copyright 2017 The Android Open Source Project

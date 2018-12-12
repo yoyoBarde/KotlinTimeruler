@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package december.timeruler.com.timeruler_december
+package december.timeruler.com.timeruler_december.Camera
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity

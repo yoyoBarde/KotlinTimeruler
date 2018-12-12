@@ -1,4 +1,4 @@
-package december.timeruler.com.timeruler_december
+package december.timeruler.com.timeruler_december.Camera
 
 /*
  * Copyright 2017 The Android Open Source Project
@@ -16,29 +16,28 @@ package december.timeruler.com.timeruler_december
  * limitations under the License.
  */
 
+import android.Manifest
 import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
 import android.support.v4.app.DialogFragment
+import december.timeruler.com.timeruler_december.R
 
 /**
- * Shows an error message dialog.
+ * Shows OK/Cancel confirmation dialog about camera permission.
  */
-class ErrorDialog : DialogFragment() {
+class ConfirmationDialog : DialogFragment() {
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog =
         AlertDialog.Builder(activity)
-            .setMessage(arguments!!.getString(ARG_MESSAGE))
-            .setPositiveButton(android.R.string.ok) { _, _ -> activity!!.finish() }
+            .setMessage(R.string.request_permission)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                parentFragment!!.requestPermissions(arrayOf(Manifest.permission.CAMERA),
+                    REQUEST_CAMERA_PERMISSION
+                )
+            }
+            .setNegativeButton(android.R.string.cancel) { _, _ ->
+                parentFragment!!.activity?.finish()
+            }
             .create()
-
-    companion object {
-
-        @JvmStatic private val ARG_MESSAGE = "message"
-
-        @JvmStatic fun newInstance(message: String): ErrorDialog = ErrorDialog().apply {
-            arguments = Bundle().apply { putString(ARG_MESSAGE, message) }
-        }
-    }
-
 }

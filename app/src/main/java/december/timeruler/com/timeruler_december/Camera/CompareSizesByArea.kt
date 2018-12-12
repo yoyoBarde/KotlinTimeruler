@@ -1,4 +1,4 @@
-package december.timeruler.com.timeruler_december
+package december.timeruler.com.timeruler_december.Camera
 
 import android.util.Size
 import java.lang.Long.signum

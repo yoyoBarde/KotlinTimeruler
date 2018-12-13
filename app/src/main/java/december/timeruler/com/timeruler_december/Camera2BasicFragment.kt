@@ -794,8 +794,8 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
                         try {
                             // Auto focus should be continuous for camera preview.
                             previewRequestBuilder.set(
-                                CaptureRequest.CONTROL_AF_MODE,
-                                CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
+                                CaptureRequest.STATISTICS_FACE_DETECT_MODE
+                                ,CameraMetadata.STATISTICS_FACE_DETECT_MODE_FULL
                             )
                             // Flash is automatically enabled when necessary.
                             setAutoFlash(previewRequestBuilder)
@@ -945,6 +945,9 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
                     Log.d(TAG, file.toString())
                     unlockFocus()
                 }
+
+
+
             }
 
             captureSession?.apply {

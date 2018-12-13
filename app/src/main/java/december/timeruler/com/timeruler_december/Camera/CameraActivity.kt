@@ -16,21 +16,25 @@
 
 package december.timeruler.com.timeruler_december.Camera
 
+import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import december.timeruler.com.timeruler_december.Camera2BasicFragment
 import december.timeruler.com.timeruler_december.R
+import december.timeruler.com.timeruler_december.SurfaceCamera
 
 class CameraActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
-        savedInstanceState ?: supportFragmentManager.beginTransaction()
-            .replace(R.id.container, Camera2BasicFragment.newInstance())
-            .commit()
+//        savedInstanceState ?: supportFragmentManager.beginTransaction()
+//            .replace(R.id.container, Camera2BasicFragment.newInstance())
+//            .commit()
 
 
+    var myIntent = Intent(this,SurfaceCamera::class.java)
+        startActivity(myIntent)
 
     }
 

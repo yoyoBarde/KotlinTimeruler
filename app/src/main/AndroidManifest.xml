@@ -38,7 +38,7 @@
                 android:name="com.google.android.gms.vision.DEPENDENCIES"
                 android:value="face"/>
 
-        <activity android:name=".Camera.CameraActivity">
+        <activity android:name=".LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 

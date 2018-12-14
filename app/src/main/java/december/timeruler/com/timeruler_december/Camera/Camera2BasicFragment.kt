@@ -1,4 +1,4 @@
-package december.timeruler.com.timeruler_december
+package december.timeruler.com.timeruler_december.Camera
 
 /*
  * Copyright 2017 The Android Open Source Project
@@ -51,7 +51,9 @@ import com.google.android.gms.vision.Detector
 import com.google.android.gms.vision.Frame
 import com.google.android.gms.vision.face.Face
 import com.google.android.gms.vision.face.FaceDetector
-import december.timeruler.com.timeruler_december.Camera.*
+import december.timeruler.com.timeruler_december.JavaFunctions
+import december.timeruler.com.timeruler_december.R
+import december.timeruler.com.timeruler_december.SurfaceCamera
 import kotlinx.android.synthetic.main.fragment_camera2_basic.*
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
@@ -223,14 +225,16 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
                         aeState == CaptureResult.CONTROL_AE_STATE_PRECAPTURE ||
                         aeState == CaptureRequest.CONTROL_AE_STATE_FLASH_REQUIRED
                     ) {
-                        state = STATE_WAITING_NON_PRECAPTURE
+                        state =
+                                STATE_WAITING_NON_PRECAPTURE
                     }
                 }
                 STATE_WAITING_NON_PRECAPTURE -> {
                     // CONTROL_AE_STATE can be null on some devices
                     val aeState = result.get(CaptureResult.CONTROL_AE_STATE)
                     if (aeState == null || aeState != CaptureResult.CONTROL_AE_STATE_PRECAPTURE) {
-                        state = STATE_PICTURE_TAKEN
+                        state =
+                                STATE_PICTURE_TAKEN
                         captureStillPicture()
                     }
                 }
@@ -247,7 +251,8 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
                 // CONTROL_AE_STATE can be null on some devices
                 val aeState = result.get(CaptureResult.CONTROL_AE_STATE)
                 if (aeState == null || aeState == CaptureResult.CONTROL_AE_STATE_CONVERGED) {
-                    state = STATE_PICTURE_TAKEN
+                    state =
+                            STATE_PICTURE_TAKEN
                     captureStillPicture()
                 } else {
                     runPrecaptureSequence()
@@ -282,16 +287,17 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
     ): View? = inflater.inflate(R.layout.fragment_camera2_basic, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        view.findViewById<View>(R.id.picture).setOnClickListener(this)
+        view.findViewById<View>(R.id.btn_in).setOnClickListener(this)
         view.findViewById<View>(R.id.info).setOnClickListener(this)
         textureView = view.findViewById(R.id.texture)
 
         myDigitalCLock = view.findViewById(R.id.digitalClock)
 
         myJavaFunc = JavaFunctions()
-        var myJavaFunctions: JavaFunctions = JavaFunctions()
+        var myJavaFunctions: JavaFunctions =
+            JavaFunctions()
         myJavaFunctions.faceScanner(activity!!)
-        var myIntent:Intent = Intent(activity!!,SurfaceCamera::class.java)
+        var myIntent:Intent = Intent(activity!!, SurfaceCamera::class.java)
        //startActivity(myIntent)
         doAsync {
             var myDate = getCurrentDate()
@@ -318,7 +324,7 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
         }
 
         surfaceCamera()
-        out.setOnClickListener {
+        btn_out.setOnClickListener {
             Log.e(TAG, "tagtag")
             myJavaFunctions.detectFace(globalBitmap, activity!!)
 
@@ -398,7 +404,9 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
     private fun requestCameraPermission() {
         if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
             ConfirmationDialog()
-                .show(childFragmentManager, FRAGMENT_DIALOG)
+                .show(childFragmentManager,
+                    FRAGMENT_DIALOG
+                )
         } else {
             requestPermissions(
                 arrayOf(Manifest.permission.CAMERA),
@@ -412,7 +420,9 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
             if (grantResults.size != 1 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                 ErrorDialog.newInstance(getString(R.string.request_permission))
-                    .show(childFragmentManager, FRAGMENT_DIALOG)
+                    .show(childFragmentManager,
+                        FRAGMENT_DIALOG
+                    )
             }
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -472,18 +482,21 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
                 var maxPreviewWidth = if (swappedDimensions) displaySize.y else displaySize.x
                 var maxPreviewHeight = if (swappedDimensions) displaySize.x else displaySize.y
 
-                if (maxPreviewWidth > MAX_PREVIEW_WIDTH) maxPreviewWidth = MAX_PREVIEW_WIDTH
-                if (maxPreviewHeight > MAX_PREVIEW_HEIGHT) maxPreviewHeight = MAX_PREVIEW_HEIGHT
+                if (maxPreviewWidth > MAX_PREVIEW_WIDTH) maxPreviewWidth =
+                        MAX_PREVIEW_WIDTH
+                if (maxPreviewHeight > MAX_PREVIEW_HEIGHT) maxPreviewHeight =
+                        MAX_PREVIEW_HEIGHT
 
                 // Danger, W.R.! Attempting to use too large a preview size could  exceed the camera
                 // bus' bandwidth limitation, resulting in gorgeous previews but the storage of
                 // garbage capture data.
-                previewSize = chooseOptimalSize(
-                    map.getOutputSizes(SurfaceTexture::class.java),
-                    rotatedPreviewWidth, rotatedPreviewHeight,
-                    maxPreviewWidth, maxPreviewHeight,
-                    largest
-                )
+                previewSize =
+                        chooseOptimalSize(
+                            map.getOutputSizes(SurfaceTexture::class.java),
+                            rotatedPreviewWidth, rotatedPreviewHeight,
+                            maxPreviewWidth, maxPreviewHeight,
+                            largest
+                        )
 
                 // We fit the aspect ratio of TextureView to the size of preview we picked.
                 if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -508,7 +521,9 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
             // Currently an NPE is thrown when the Camera2API is used but not supported on the
             // device this code runs.
             ErrorDialog.newInstance(getString(R.string.camera_error))
-                .show(childFragmentManager, FRAGMENT_DIALOG)
+                .show(childFragmentManager,
+                    FRAGMENT_DIALOG
+                )
         }
 
     }
@@ -892,7 +907,8 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
                 CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER_START
             )
             // Tell #captureCallback to wait for the precapture sequence to be set.
-            state = STATE_WAITING_PRECAPTURE
+            state =
+                    STATE_WAITING_PRECAPTURE
             captureSession?.capture(
                 previewRequestBuilder.build(), captureCallback,
                 backgroundHandler
@@ -1052,7 +1068,7 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
     }
     override fun onClick(view: View) {
         when (view.id) {
-            R.id.picture -> lockFocus()
+            R.id.btn_in -> lockFocus()
             R.id.info -> {
                 if (activity != null) {
                     AlertDialog.Builder(activity)
@@ -1061,7 +1077,7 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
                         .show()
                 }
             }
-            R.id.out -> {
+            R.id.btn_out -> {
                 Log.e(TAG, "ButtonOut")
 
 //                var result = detect(globalBitmap,activity!!)
@@ -1289,7 +1305,8 @@ class Camera2BasicFragment : Fragment(), View.OnClickListener,
 
 
         @JvmStatic
-        fun newInstance(): Camera2BasicFragment = Camera2BasicFragment()
+        fun newInstance(): Camera2BasicFragment =
+            Camera2BasicFragment()
     }
 
 

@@ -19,7 +19,9 @@ import android.util.SparseArray
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
+import android.widget.Button
 import android.widget.ImageView
+import android.widget.Toast
 import com.google.android.gms.vision.CameraSource
 import com.google.android.gms.vision.Detector
 import com.google.android.gms.vision.Tracker
@@ -39,9 +41,8 @@ import java.util.*
 class SurfaceCamera : AppCompatActivity() {
     lateinit var surfaceView: SurfaceView
     lateinit var cameraSource: CameraSource
-    lateinit var barcodeDetector: BarcodeDetector
-    lateinit var mGraphicOverlay: GraphicOverlay
-
+    lateinit var  mBtn_in: Button
+    lateinit var  mBtn_out: Button
     var globalCounter = 0
     var smileSettoWhite = true
     val TAG = "SurfaceCamera"
@@ -54,11 +55,18 @@ class SurfaceCamera : AppCompatActivity() {
         setContentView(R.layout.activity_camera_source)
         my_ic_face = findViewById(R.id.iv_facedetected_ic)
         my_iv_preview = findViewById<ImageView>(R.id.iv_photoPreview)
+        mBtn_in = findViewById<Button>(R.id.btn_in)
+        mBtn_out= findViewById<Button>(R.id.btn_out)
+
         setupDigitalClock()
+
+askPermissions()
         onCreateDoables()
 
 
     }
+
+
 
     private fun onCreateDoables() {
         val height = displayMetrics.heightPixels
@@ -66,26 +74,26 @@ class SurfaceCamera : AppCompatActivity() {
         val displayMetrics = DisplayMetrics()
         surfaceView = findViewById<SurfaceView>(R.id.cameraPreview)
         val detector = FaceDetector.Builder(applicationContext)
-                .setProminentFaceOnly(true)
-                .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
-                .setTrackingEnabled(true)
-                .build()
+            .setProminentFaceOnly(true)
+            .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
+            .setTrackingEnabled(true)
+            .build()
 
         windowManager.defaultDisplay.getMetrics(displayMetrics)
         cameraSource = CameraSource.Builder(this, detector)
-                .setRequestedPreviewSize(640, 480)
-                .setFacing(CameraSource.CAMERA_FACING_FRONT)
-                .setRequestedFps(15.0f)
-                .build()
+            .setRequestedPreviewSize(640, 480)
+            .setFacing(CameraSource.CAMERA_FACING_FRONT)
+            .setRequestedFps(15.0f)
+            .build()
 
 
         Log.e("ScreenSize", (width + height).toString())
         surfaceView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {
                 if (ActivityCompat.checkSelfPermission(
-                                applicationContext,
-                                Manifest.permission.CAMERA
-                        ) != PackageManager.PERMISSION_GRANTED
+                        applicationContext,
+                        Manifest.permission.CAMERA
+                    ) != PackageManager.PERMISSION_GRANTED
                 ) {
                     return
                 }
@@ -125,12 +133,12 @@ class SurfaceCamera : AppCompatActivity() {
 
                         globalCounter += 1
                         if (globalCounter == 1) {
-                                uiThread {
-                                    my_ic_face.setImageResource(R.mipmap.ic_face)
-                                }
+                            uiThread {
+                                my_ic_face.setImageResource(R.mipmap.ic_face)
+                            }
                         }
 
-                        if (globalCounter == 25) {
+                        if (globalCounter == 27) {
                             goVibrate()
 
 
@@ -142,16 +150,16 @@ class SurfaceCamera : AppCompatActivity() {
                         }
                         if (globalCounter == 30) {
                             Log.e(TAG, "gwapo ka")
+                            cameraSource.takePicture(mShutterCallback, mPictureCallback)
                             globalCounter = -20
 
-                            cameraSource.takePicture(mShutterCallback, mPictureCallback)
 
                         }
 
                     } else {
-                            uiThread {
-                                my_ic_face.setImageResource(R.mipmap.ic_face_red)
-                            }
+                        uiThread {
+                            my_ic_face.setImageResource(R.mipmap.ic_face_red)
+                        }
                         globalCounter = 0
 
 
@@ -172,7 +180,7 @@ class SurfaceCamera : AppCompatActivity() {
         // val orientation = Exif.getOrientation(bytes)
         doAsync {
             var userBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-
+                enableButton()
             Log.e(TAG, userBitmap.toString())
 
             uiThread {
@@ -188,7 +196,7 @@ class SurfaceCamera : AppCompatActivity() {
 //            }
 //            // if orientation is zero we don't need to rotate this
 //
-//            else -> {
+    //            else -> {
 //            }
 //        }
 //        //write your code here to save bitmap
@@ -256,6 +264,52 @@ class SurfaceCamera : AppCompatActivity() {
         val df = SimpleDateFormat("MMM dd,yyyy")
         return df.format(c.time)
     }
+    fun askPermissions(){
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (applicationContext.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+///method to get Images
+
+            } else {
+                if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+                    Toast.makeText(
+                        applicationContext,
+                        "Your Permission is needed to get access the camera",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+                requestPermissions(
+                    arrayOf(
+                        // Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                        // Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.CAMERA
+                    ), 0
+                )
+            }
+        }
+    }
+    fun disableButtons(){
+        doAsync {
+            var myFloat: Float = 0.5.toFloat()
+            uiThread {
+                mBtn_in.isClickable = false
+                mBtn_out.isClickable = false
+                mBtn_in.alpha = myFloat
+                mBtn_out.alpha = myFloat
+            }
+        }
+    }
+    fun enableButton(){
+        doAsync {
+            Log.e(TAG,"enableButtons")
+            var myFloat:Float = .99.toFloat()
+            uiThread {
+                mBtn_in.isClickable = true
+                mBtn_out.isClickable = true
+                mBtn_in.alpha = myFloat
+                mBtn_out.alpha = myFloat }
+        }
+
+    }
 
 }

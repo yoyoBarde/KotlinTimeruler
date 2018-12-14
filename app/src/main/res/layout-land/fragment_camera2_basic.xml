@@ -79,7 +79,7 @@
                 app:layout_constraintEnd_toEndOf="parent">
 
                 <Button
-                    android:id="@+id/picture"
+                    android:id="@+id/btn_in"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/in"
@@ -87,12 +87,12 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"/>
                 <Button
-                    android:id="@+id/out"
+                    android:id="@+id/btn_out"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/out"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/picture"
+                    app:layout_constraintTop_toBottomOf="@+id/btn_in"
                     app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent"
                     />
             </android.support.constraint.ConstraintLayout>
